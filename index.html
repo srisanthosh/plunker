@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html ng-app="app" ng-controller="FetchCtrl">
+
+<head>
+  <script data-require="lodash.js@*" data-semver="3.10.1" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.2/lodash.js"></script>
+  <script data-require="lodash-fp@*" data-semver="0.10.2" src="https://cdn.rawgit.com/lodash/lodash-fp/0.10.2/dist/lodash-fp.min.js"></script>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootswatch/3.1.1/darkly/bootstrap.min.css" />
+  <script type="text/javascript" src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
+  <script src="http://www.chartjs.org/dist/2.6.0/Chart.bundle.js"></script>
+  <script src="http://www.chartjs.org/samples/latest/utils.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+  <script src="app.js"></script>
+  <script src="service.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <title>({{last}}){{currency}}
+  </title>
+  <center>
+    <h1>Bittrex </h1>
+  </center>
+  <div data-ng-init="click()" class="col-xs-5 col-xs-offset-3">
+    Market
+    <select ng-click="click()" class="form-control" ng-model="currency" name="Market">
+      <option value="BTC-ETH">BTC-ETH</option>
+      <option value="BTC-LTC">BTC-LTC</option>
+      <option value="BTC-GNT">BTC-GNT</option>
+      <option value="BTC-XRP">BTC-XRP</option>
+    </select>
+    <br />
+    <h3>
+        <span style="color: #ff4d4d">BID:</span>
+        <span style="float: right;">{{bid}}</span>
+        <hr />
+        <span style="color: #ff4d4d"> ASK:</span>
+        <span style="float: right;">{{ask}}</span>
+        <hr />
+        <span style="color: #33ffad">LAST:</span>
+        <span style="float: right;">{{last}}</span>
+      </h3>
+    <hr />
+    <center>
+      <button type="submit" class="btn btn-warning" ng-disabled="realtime" ng-click="fetch()">Get</button>
+      <button type="submit" class="btn btn-warning" ng-click="clear()">Clear</button>
+      <br />
+    </center>
+    <label class="switch">
+      <input type="checkbox" ng-model="realtime" ng-click="loop()" id="min" />
+      <span class="slider round"></span>
+    </label>
+    <label id="rtxt">{{rtxt}}</label>
+    <span style="color: #ff4d4d;float: right;">
+        <font size="6">SPREAD:                                                                                                              <span ng-repeat="i in tab | limitTo: 1">
+            <span ng-repeat="j in tab1|limitTo: 1">  {{(((j.Rate-i.Rate)/j.Rate)*100).toFixed(1)}}%</span>
+    </span>
+    </font>
+    </span>
+    <br />
+  </div>
+  <div class="col-xs-7 col-xs-offset-2">
+    <br />
+    <h3>
+        <center>
+          <button type="submit" class="btn btn-success" ng-disabled="realtime" ng-click="orderbook()">
+            <b> ORDER BOOK</b>
+          </button>
+        </center>
+      </h3>
+    <h4>
+        <span style="float:left;">BUY</span>
+        <p class="indent">SELL</p>
+      </h4>
+    <br />
+    <table style="width: 48%; float: left;" class="table table-bordered">
+      <tbody>
+        <tr>
+          <th>Total</th>
+          <th>SIZE ( <span style="color:#f7b87b">{{cur1}}</span> )
+          </th>
+          <th>BID ( <span style="color:#f7b87b">BTC</span> )
+          </th>
+        </tr>
+        <tr ng-repeat="i in tab | limitTo: 5 ">
+          <td>
+            {{i.Rate*i.Quantity}}</td>
+          <td>
+            {{i.Quantity }}</td>
+          <td>
+            {{i.Rate }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <table style="width:48%; float: right;" class="table table-bordered">
+      <tbody>
+        <tr>
+          <th>ASK ( <span style="color:#f7b87b">BTC</span> )
+          </th>
+          <th>SIZE ( <span style="color:#f7b87b">{{cur1}}</span> )
+          </th>
+          <th>Total</th>
+        </tr>
+        <tr ng-repeat="i in tab1 | limitTo: 5 ">
+          <td>
+            {{i.Rate}}</td>
+          <td>
+            {{i.Quantity }}</td>
+          <td>
+            {{i.Rate*i.Quantity }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>
+        <center>
+          <button type="submit" class="btn btn-success" ng-disabled="realtime" ng-click="markethistory()">
+            <b> MARKET HISTORY</b>
+          </button>
+        </center>
+      </h3>
+    <br />
+  </div>
+  <table class="table table-bordered">
+    <tbody>
+      <tr>
+        <th>DATE</th>
+        <th>BUY / SELL</th>
+        <th>BID / ASK</th>
+        <th>TOTAL UNITS ( <span style="color:#f7b87b">{{cur1}}</span> )
+        </th>
+        <th>TOTAL COST ( <span style="color:#f7b87b">BTC</span> )
+        </th>
+      </tr>
+      <tr ng-repeat="i in market | limitTo: 10">
+        <td>
+          {{i.TimeStamp}}</td>
+        <td>
+          {{i.OrderType}}</td>
+        <td>
+          {{i.Price }}</td>
+        <td>
+          {{i.Quantity }}</td>
+        <td>
+          {{i.Total }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="col-xs-5 col-xs-offset-3">
+    <h3>
+        <center>
+          <button type="submit" class="btn btn-success" ng-disabled="realtime" ng-click="graph()">
+            <b> INFORMATION CHART</b>
+            
+          </button>
+
+        </center>
+      </h3>
+    <br />
+  </div>
+  <div id="left" style=" padding-left: 1%;width:49%">
+    <canvas id="canvas1" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+  <div id="right" style=" padding-left: 1%;width:49%">
+    <canvas id="canvas2" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+  <br>
+  <div id="left" style=" padding-left: 1%;width:49%">
+    <canvas id="canvas3" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+  <div id="right" style=" padding-left: 1%;width:49%">
+      <canvas id="canvas4" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+  <br>
+ <div id="left" style=" padding-left: 1%;width:49%">
+    <canvas id="canvas5" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+ <div id="right" style=" padding-left: 1%;width:49%">
+    <canvas id="canvas6" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+  <br>
+ <div id="left" style=" padding-left: 1%;width:50%">
+    <canvas id="canvas7" ng-show="showgraph" style="background-color:white;"></canvas>
+  </div>
+</body>
+
+</html>
